@@ -12,6 +12,7 @@ def get_releases(mbid):
     Returns:
         releases (list): list of all releases fetched from the API
     """
+    print(f"Querying releases information for artist mbid {mbid}.")
     base_request = f"https://musicbrainz.org/ws/2/release?artist={mbid}&type=album&status=official&fmt=json"
     offset = 0
     limit = 100

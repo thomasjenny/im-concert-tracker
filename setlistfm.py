@@ -3,9 +3,9 @@ import requests
 import math
 import time
 import pprint
-import json
+from typing import Optional, List, Dict
 
-def get_setlists(mbid, headers, page_limit = None):
+def get_setlists(mbid: str, headers: Dict[str, str], page_limit: Optional[int] = None) -> List[dict]:
     """Fetch concerts from the setlist.fm API.
 
     Args:
@@ -37,7 +37,10 @@ def get_setlists(mbid, headers, page_limit = None):
 
         if page_limit and page >= page_limit:
             more_results_available = False
-            print(f"Page {page} of {number_of_pages} total pages queried.")
+            print(
+                f"Page {page} of {number_of_pages} total pages queried. "
+                f"User-specified page limit of {page_limit} reached."
+            )
 
         if page >= number_of_pages:
             more_results_available = False

@@ -4,20 +4,26 @@ import json
 with open("setlists.json", "r") as file:
     setlists = json.load(file)
 
-# print(type(setlists))
-# print((setlists[0]["venue"]))
+column_names = ["concert_id", "concert_date", "tour_name", "venue_id", "venue_name", "city_id",
+                "city", "state_id", "state", "country_id", "country", "latitude", "longitude",
+                "setlist_id", "setlist_detail_id", "song_id", "album_id", "setlist_position",
+                "song_name", "album_name", "tape", "cover_info", "encore"]
 
-venue_id, city_id, venue_name = [], [], []
+columns = {col_name: [] for col_name in column_names}
 
-for i in setlists:
-    individual_venue_id = i["venue"]["id"]
-    individual_city_id = i["venue"]["city"]["id"]
-    individual_venue_name = i["venue"]["name"]
+for record in setlists:
+    # concert_id
+    # concert_date
+    # tour_name
+    columns["venue_id"].append(record["venue"]["id"])
+    columns["venue_name"].append(record["venue"]["name"])
+    columns["city_id"].append(record["venue"]["city"]["id"])
 
-    venue_id.append(individual_venue_id)
-    city_id.append(individual_city_id)
-    venue_name.append(individual_venue_name)
+# Create venue table
+venue = pd.DataFrame(list(zip(columns["venue_id"], 
+                              columns["city_id"],
+                              columns["venue_name"])),
+                              columns = ["venue_id", "city_id", "venue_name"])
+venue = venue.drop_duplicates(subset = "venue_id", keep = "first")
 
-print(len(venue_id))
-print(len(city_id))
-print(len(venue_name))
+print(venue)

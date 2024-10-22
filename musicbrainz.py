@@ -3,10 +3,11 @@ import time
 import pprint
 from typing import List
 import json
+import os
 
 
 def get_releases(mbid: str) -> List[dict]:
-    """Fetch releases from the Musicbrainz API with pagination support. 
+    """Fetch releases from the Musicbrainz API with pagination support.
     Currently set to only fetch official album releases.
 
     Args:
@@ -28,7 +29,9 @@ def get_releases(mbid: str) -> List[dict]:
         releases.extend(response["releases"])
 
         release_count = response["release-count"]
-        print(f"Results {offset}-{len(releases)} of {release_count} total results queried.")
+        print(
+            f"Results {offset}-{len(releases)} of {release_count} total results queried."
+        )
         offset += limit
 
         if offset >= release_count:
@@ -48,7 +51,7 @@ def get_songs(releases: List[dict]) -> List[dict]:
             must contain at least a key-value pair of {"id": "<mbid>"}
 
     Returns:
-        songs (list): list of all songs for the input releases fetched 
+        songs (list): list of all songs for the input releases fetched
         from the API
     """
     print(f"Querying songs...")
@@ -69,23 +72,23 @@ def get_songs(releases: List[dict]) -> List[dict]:
 
 
 if __name__ == "__main__":
-    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767" # MBID for Iron Maiden
+    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767"  # MBID for Iron Maiden
 
     # Test releases
     releases = get_releases(mbid)
     pprint.pp(releases[0])
     print(len(releases))
 
-    print(f"\n{99 * '='}\n") # Delimiter
-    
+    print(f"\n\n{99 * '='}\n\n")  # Delimiter
+
     # Test songs
     songs = get_songs(releases)
     pprint.pp(songs[0])
     print(len(songs))
 
     # Write test results to JSON file
-    with open("releases_test.json", "w") as releases_file:
-        json.dump(releases, releases_file, indent = 4)
-    with open("songs_test.json", "w") as songs_file:
-        json.dump(songs, songs_file, indent = 4)
-
+    os.makedirs("data", exist_ok=True)
+    with open("./data/releases.json", "w") as releases_file:
+        json.dump(releases, releases_file, indent=4)
+    with open("./data/songs.json", "w") as songs_file:
+        json.dump(songs, songs_file, indent=4)

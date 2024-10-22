@@ -3,10 +3,13 @@ import requests
 import math
 import time
 import pprint
+import json
 from typing import Optional, List, Dict
 
 
-def get_setlists(mbid: str, headers: Dict[str, str], page_limit: Optional[int] = None) -> List[dict]:
+def get_setlists(
+    mbid: str, headers: Dict[str, str], page_limit: Optional[int] = None
+) -> List[dict]:
     """Fetch concerts from the setlist.fm API.
 
     Args:
@@ -26,7 +29,7 @@ def get_setlists(mbid: str, headers: Dict[str, str], page_limit: Optional[int] =
 
     while more_results_available:
         request = f"{base_request}?p={page}"
-        response = requests.get(request, headers = headers).json()
+        response = requests.get(request, headers=headers).json()
         setlists.extend(response["setlist"])
 
         total_items = response["total"]
@@ -48,18 +51,22 @@ def get_setlists(mbid: str, headers: Dict[str, str], page_limit: Optional[int] =
 
         page += 1
         time.sleep(2)
-    
+
     return setlists
 
 
 if __name__ == "__main__":
-    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767" # MBID for Iron Maiden
-    API_KEY = os.getenv('api_key')
-    headers = {"x-api-key": API_KEY,
-               "Accept": "application/json",
-               "Accept-Languate": "en"}
-    
-    setlists = get_setlists(mbid, headers, 1)
+    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767"  # MBID for Iron Maiden
+    API_KEY = os.getenv("api_key")
+    headers = {
+        "x-api-key": API_KEY,
+        "Accept": "application/json",
+        "Accept-Languate": "en",
+    }
+
+    setlists = get_setlists(mbid, headers)
     pprint.pp(setlists[:2])
 
-    
+    os.makedirs("data", exist_ok=True)
+    with open("./data/setlists.json", "w") as file:
+        json.dump(setlists, file, indent=4)

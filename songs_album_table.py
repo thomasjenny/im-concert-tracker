@@ -1,7 +1,12 @@
 import pandas as pd
 import json
+import os
 import pprint
 import create_database
+
+##############
+## MOVE THIS TO create_database.py
+##############
 
 
 def albums_test(releases):
@@ -15,7 +20,7 @@ def albums_test(releases):
         albums (dataframe): albums table in pandas dataframe format
     """
     column_names = [
-        "track_position",
+        # "track_position",
         "song_name",
         "album_name",
     ]
@@ -29,23 +34,50 @@ def albums_test(releases):
             for track in media.get("tracks"):
                 # Album name is in the top-level dict
                 columns["album_name"].append(release.get("title"))
-                columns["track_position"].append(track.get("position"))
+                # columns["track_position"].append(track.get("position"))
                 columns["song_name"].append(track.get("title"))
 
     albums = pd.DataFrame(
         list(
             zip(
                 columns["album_name"],
-                columns["track_position"],
+                # columns["track_position"],
                 columns["song_name"],
             )
         ),
         columns=[
             "album_name",
-            "track_position",
+            # "track_position",
             "song_name",
         ],
     )
+
+    # Filter on studio albums only
+    studio_albums = [
+        "Iron Maiden",
+        "Killers",
+        "The Number Of The Beast",
+        "Piece of Mind",
+        "Powerslave",
+        "Somewhere in Time",
+        "Seventh Son of a Seventh Son",
+        "No Prayer for the Dying",
+        "Fear of the Dark",
+        "The X Factor",
+        "Virtual XI",
+        "Brave New World",
+        "Dance of Death",
+        "A Matter of Life and Death",
+        "The Final Frontier",
+        "The Book of Souls",
+        "Senjutsu",
+    ]
+
+    # Filter studio albums only
+    albums = albums[albums["album_name"].isin(studio_albums)].reset_index(drop=True)
+    # Drop duplicate song names
+    albums = albums.drop_duplicates(subset=["album_name", "song_name"])
+    albums.sort_values(by=["album_name"])
 
     return albums
 
@@ -63,3 +95,7 @@ if __name__ == "__main__":
         albums = json.load(file)
     albums = albums_test(albums)
     print(albums)
+
+    # Write to CSV
+    os.makedirs("data", exist_ok=True)
+    albums.to_csv("data/albums.csv", index=False, encoding="utf-8")

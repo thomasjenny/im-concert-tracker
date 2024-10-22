@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import os
 
 
 def create_concert_venue_city_tables(setlists):
@@ -126,7 +127,6 @@ def create_setlist_table(setlists):
     columns = {col_name: [] for col_name in column_names}
 
     for record in setlists:
-
         sets = record.get("sets", {}).get("set", {})
 
         # Counter must be here to reset after each concert - further down, it would reset after each set.
@@ -140,7 +140,9 @@ def create_setlist_table(setlists):
                     f"{record.get("id")}_{setlist_position_counter}"
                 )
                 columns["concert_id"].append(record.get("id"))
-                columns["song_name"].append(song.get("name", ""))
+                # prevent empty song titles from being added to the table
+                if song.get("name", "") != "":
+                    columns["song_name"].append(song.get("name"))
                 columns["setlist_position"].append(setlist_position_counter)
                 columns["encore"].append(bool(set.get("encore", 0)))
                 columns["tape"].append(song.get("tape", False))
@@ -181,7 +183,15 @@ if __name__ == "__main__":
     concert, venue, city = create_concert_venue_city_tables(setlists)
     setlist = create_setlist_table(setlists)
 
-    print(concert)
-    print(venue)
-    print(city)
-    print(setlist)
+    # print(concert)
+    # print(venue)
+    # print(city)
+    # print(setlist)
+
+    # Write to CSV
+    os.makedirs("data", exist_ok = True)
+
+    concert.to_csv("data/concert.csv", index=False, encoding="utf-8")
+    venue.to_csv("data/venue.csv", index=False, encoding="utf-8")
+    city.to_csv("data/city.csv", index=False, encoding="utf-8")
+    setlist.to_csv("data/setlist.csv", index=False, encoding="utf-8")

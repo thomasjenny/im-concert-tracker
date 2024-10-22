@@ -1,9 +1,10 @@
 import pandas as pd
 import json
 import os
+from typing import List
 
 
-def create_concert_venue_city_tables(setlists):
+def create_concert_venue_city_tables(setlists: List[dict]) -> pd.DataFrame:
     """Create concert, venue, and city tables from the setlist data
     returned by the setlist.fm API.
 
@@ -103,7 +104,7 @@ def create_concert_venue_city_tables(setlists):
     return concert, venue, city
 
 
-def create_setlist_table(setlists):
+def create_setlist_table(setlists: List[dict]) -> pd.DataFrame:
     """Create the setlist table from the setlist data returned by the
     setlist.fm API.
 
@@ -176,7 +177,7 @@ def create_setlist_table(setlists):
     return setlist
 
 
-def create_albums_table(releases):
+def create_albums_table(releases: List[dict]) -> pd.DataFrame:
     """Create the albums table from the releases data returned by the
     Musicbrainz API.
 
@@ -256,10 +257,10 @@ if __name__ == "__main__":
     setlist = create_setlist_table(setlists)
     albums = create_albums_table(albums)
 
-    # Write to CSV
-    os.makedirs("data", exist_ok=True)
-    concert.to_csv("data/concert.csv", index=False, encoding="utf-8")
-    venue.to_csv("data/venue.csv", index=False, encoding="utf-8")
-    city.to_csv("data/city.csv", index=False, encoding="utf-8")
-    setlist.to_csv("data/setlist.csv", index=False, encoding="utf-8")
-    albums.to_csv("data/albums.csv", index=False, encoding="utf-8")
+    # Optional: write to CSV
+    # os.makedirs("data", exist_ok=True)
+    # concert.to_csv("data/concert.csv", index=False, encoding="utf-8")
+    # venue.to_csv("data/venue.csv", index=False, encoding="utf-8")
+    # city.to_csv("data/city.csv", index=False, encoding="utf-8")
+    # setlist.to_csv("data/setlist.csv", index=False, encoding="utf-8")
+    # albums.to_csv("data/albums.csv", index=False, encoding="utf-8")

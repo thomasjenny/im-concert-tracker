@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def clean_albums_table(albums_table):
+def clean_albums_table(albums_table: pd.DataFrame) -> pd.DataFrame:
     """Change some song names in the albums table that differ from the
     setlists table (different capitalization or apostrophes).
 
@@ -30,7 +30,7 @@ def clean_albums_table(albums_table):
     return albums_table
 
 
-def clean_setlists_table(setlists_table):
+def clean_setlists_table(setlists_table: pd.DataFrame) -> pd.DataFrame:
     """Change some song names in the albums table that differ from the
     setlists table (different capitalization or apostrophes).
 
@@ -71,7 +71,9 @@ if __name__ == "__main__":
     albums = pd.read_csv("data/albums.csv")
     setlists = pd.read_csv("data/setlist.csv")
 
-    def filter_non_album_songs(setlists_df, albums_df):
+    def filter_non_album_songs(
+        setlists_df: pd.DataFrame, albums_df: pd.DataFrame
+    ) -> pd.DataFrame:
         """Helper function to filter unique song names that are in the
         "setlists" table, but not in the "albums" table
         """

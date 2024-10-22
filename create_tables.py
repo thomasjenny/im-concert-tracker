@@ -176,22 +176,90 @@ def create_setlist_table(setlists):
     return setlist
 
 
+def create_albums_table(releases):
+    """Create the albums table from the releases data returned by the
+    Musicbrainz API.
+
+    Args:
+        releases (list): list of all releases fetched from the API
+
+    Returns:
+        albums (dataframe): albums table in pandas dataframe format
+    """
+    column_names = [
+        "song_name",
+        "album_name",
+    ]
+
+    columns = {col_name: [] for col_name in column_names}
+
+    for release in releases:
+        # Media contains the track information
+        for media in release.get("media"):
+            # tracks is a list of dicts containing song information
+            for track in media.get("tracks"):
+                # Album name is in the top-level dict
+                columns["album_name"].append(release.get("title"))
+                columns["song_name"].append(track.get("title"))
+
+    albums = pd.DataFrame(
+        list(
+            zip(
+                columns["album_name"],
+                columns["song_name"],
+            )
+        ),
+        columns=[
+            "album_name",
+            "song_name",
+        ],
+    )
+
+    # Filter on studio albums only
+    studio_albums = [
+        "Iron Maiden",
+        "Killers",
+        "The Number Of The Beast",
+        "Piece of Mind",
+        "Powerslave",
+        "Somewhere in Time",
+        "Seventh Son of a Seventh Son",
+        "No Prayer for the Dying",
+        "Fear of the Dark",
+        "The X Factor",
+        "Virtual XI",
+        "Brave New World",
+        "Dance of Death",
+        "A Matter of Life and Death",
+        "The Final Frontier",
+        "The Book of Souls",
+        "Senjutsu",
+    ]
+
+    # Filter studio albums only
+    albums = albums[albums["album_name"].isin(studio_albums)].reset_index(drop=True)
+    # Drop duplicate song names
+    albums = albums.drop_duplicates(subset=["album_name", "song_name"])
+    albums.sort_values(by=["album_name"])
+
+    return albums
+
+
 if __name__ == "__main__":
     with open("setlists.json", "r") as file:
         setlists = json.load(file)
 
+    with open("./test/songs_test.json") as file:
+        albums = json.load(file)
+
     concert, venue, city = create_concert_venue_city_tables(setlists)
     setlist = create_setlist_table(setlists)
-
-    # print(concert)
-    # print(venue)
-    # print(city)
-    # print(setlist)
+    albums = create_albums_table(albums)
 
     # Write to CSV
-    os.makedirs("data", exist_ok = True)
-
+    os.makedirs("data", exist_ok=True)
     concert.to_csv("data/concert.csv", index=False, encoding="utf-8")
     venue.to_csv("data/venue.csv", index=False, encoding="utf-8")
     city.to_csv("data/city.csv", index=False, encoding="utf-8")
     setlist.to_csv("data/setlist.csv", index=False, encoding="utf-8")
+    albums.to_csv("data/albums.csv", index=False, encoding="utf-8")

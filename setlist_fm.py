@@ -1,10 +1,8 @@
-import os
-import requests
 import math
 import time
-import pprint
-import json
 from typing import Optional, List, Dict
+
+import requests
 
 
 def get_setlists(
@@ -56,17 +54,29 @@ def get_setlists(
 
 
 if __name__ == "__main__":
-    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767"  # MBID for Iron Maiden
-    API_KEY = os.getenv("api_key")
+    import json
+    import os
+    from pathlib import Path
+    import pprint
+
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    API_KEY = os.getenv("API_KEY")
+
+    # Test get_setlists
     headers = {
         "x-api-key": API_KEY,
         "Accept": "application/json",
         "Accept-Languate": "en",
     }
-
+    mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767"  # MBID for Iron Maiden
     setlists = get_setlists(mbid, headers)
     pprint.pp(setlists[:2])
 
-    os.makedirs("data", exist_ok=True)
-    with open("./data/setlists.json", "w") as file:
+    out_path = Path.cwd() / "data" / "json_raw"
+    out_filename = "setlist_fm_setlists.json"
+    os.makedirs(out_path, exist_ok=True)
+
+    with open(Path(out_path / out_filename), "w") as file:
         json.dump(setlists, file, indent=4)

@@ -1,6 +1,4 @@
 import pandas as pd
-import json
-import os
 from typing import List
 
 
@@ -77,6 +75,7 @@ def create_concert_venue_city_tables(setlists: List[dict]) -> pd.DataFrame:
         columns=["concert_id", "venue_id", "city_id", "date", "tour"],
     )
     concert = concert.drop_duplicates(subset="concert_id", keep="first")
+    concert.reset_index(inplace=True)
 
     # Create venue table
     venue = pd.DataFrame(
@@ -84,6 +83,7 @@ def create_concert_venue_city_tables(setlists: List[dict]) -> pd.DataFrame:
         columns=["venue_id", "city_id", "venue"],
     )
     venue = venue.drop_duplicates(subset="venue_id", keep="first")
+    venue.reset_index(inplace=True)
 
     # Create city table
     city = pd.DataFrame(
@@ -100,6 +100,7 @@ def create_concert_venue_city_tables(setlists: List[dict]) -> pd.DataFrame:
         columns=["city_id", "city", "country_id", "country", "latitude", "longitude"],
     )
     city = city.drop_duplicates(subset="city_id", keep="first")
+    city.reset_index(inplace=True)
 
     return concert, venue, city
 
@@ -242,20 +243,31 @@ def create_albums_table(releases: List[dict]) -> pd.DataFrame:
     # Drop duplicate song names
     albums = albums.drop_duplicates(subset=["album_name", "song_name"])
     albums.sort_values(by=["album_name"])
+    albums.reset_index(inplace=True)
 
     return albums
 
 
 if __name__ == "__main__":
-    with open("setlists.json", "r") as file:
-        setlists = json.load(file)
+    import json
 
-    with open("./test/songs_test.json") as file:
-        albums = json.load(file)
+    from pathlib import Path
+
+    in_path = Path.cwd() / "data" / "json_raw"
+    in_setlists_file = "setlist_fm_setlists.json"
+    in_songs_file = "musicbrainz_songs.json"
+
+    with open(Path(in_path / in_setlists_file), "r") as setlists_file:
+        setlists = json.load(setlists_file)
+
+    with open(Path(in_path / in_songs_file)) as songs_file:
+        albums = json.load(songs_file)
 
     concert, venue, city = create_concert_venue_city_tables(setlists)
     setlist = create_setlist_table(setlists)
     albums = create_albums_table(albums)
+
+    print(albums)
 
     # Optional: write to CSV
     # os.makedirs("data", exist_ok=True)

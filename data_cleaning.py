@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 
 
 def clean_album_table(album_table: pd.DataFrame) -> pd.DataFrame:
@@ -89,8 +88,13 @@ def add_missing_tours(
     data_completion_df = pd.read_csv(data_completion_file_path)
 
     # Set index for both dataframes to "date" and map on date
-    concert_table.set_index("date", inplace=True)
-    data_completion_df.set_index("date", inplace=True)
+    # concert_table.set_index("date", inplace=True)
+    # data_completion_df.set_index("date", inplace=True)
+    # concert_table.update(data_completion_df)
+    # concert_table.reset_index(inplace=True)
+
+    concert_table.set_index("concert_id", inplace=True)
+    data_completion_df.set_index("concert_id", inplace=True)
     concert_table.update(data_completion_df)
     concert_table.reset_index(inplace=True)
 
@@ -98,15 +102,25 @@ def add_missing_tours(
 
 
 if __name__ == "__main__":
-    # Test albums and setlists cleaning functions
-    albums = pd.read_csv("data/albums.csv")
-    setlists = pd.read_csv("data/setlist.csv")
+    import os
+    import shutil
 
+    from pathlib import Path
+
+    # Load raw CSV data
+    in_path = Path.cwd() / "data" / "csv_raw"
+    album = pd.read_csv(Path(in_path / "album_raw.csv"))
+    setlist = pd.read_csv(Path(in_path / "setlist_raw.csv"))
+    # Missing tour data is completed in the concert table (see below)
+    concert = pd.read_csv(Path(in_path / "concert_raw.csv"))
+
+    # Define helper function to test data cleaning
     def filter_non_album_songs(
         setlists_df: pd.DataFrame, albums_df: pd.DataFrame
     ) -> pd.DataFrame:
         """Helper function to filter unique song names that are in the
-        "setlists" table, but not in the "albums" table
+        "setlists" table, but not in the "albums" table (covers,
+        playback intros, etc.)
         """
         filter = setlists_df[~setlists_df["song_name"].isin(albums_df["song_name"])]
         filter = filter.drop_duplicates(subset="song_name")
@@ -114,18 +128,18 @@ if __name__ == "__main__":
 
     # Test if studio album songs have been renamed in the "albums" table
     # to reflect the "setlists" table
-    albums_clean = clean_album_table(albums)
-    filter_albums_before = filter_non_album_songs(setlists, albums)
-    filter_albums_after = filter_non_album_songs(setlists, albums_clean)
+    album_clean = clean_album_table(album)
+    filter_albums_before = filter_non_album_songs(setlist, album)
+    filter_albums_after = filter_non_album_songs(setlist, album_clean)
 
     # Test if duplicates in the "setlists" table of non-Maiden songs
     # have been renamed correctly
-    setlists_clean = clean_setlist_table(setlists)
-    filter_setlists_after = filter_non_album_songs(setlists_clean, albums_clean)
+    setlist_clean = clean_setlist_table(setlist)
+    filter_setlists_after = filter_non_album_songs(setlist_clean, album_clean)
 
     print(
         f"{150 * "="}\n\n",
-        f'Filtered raw "setlists" table - all songs in "setlists" table, but not in "albums" table:'
+        f'Filtered raw "setlists" table - all songs in "setlists" table, but not in "albums" table:',
         f"\n{filter_albums_before}",
         f"\n\n{150 * "="}\n\n",
         f'Filtered "setlists" table after cleaning the "albums" table: \n{filter_albums_after}',
@@ -138,14 +152,24 @@ if __name__ == "__main__":
         f"\n\n{150 * "="}\n",
     )
 
-    # Test tour data completion function
-    data_completion_file = "./data/tour_info_completion.csv"
-    concert = pd.read_csv("data/concert.csv")
+    # Test the tour data completion function
+    data_completion_file = Path(Path.cwd() / "data" / "tour_info_completion.csv")
     concert_clean = add_missing_tours(concert, data_completion_file)
-    print(concert_clean)
 
-    # Optional: write to CSV
-    # os.makedirs("data", exist_ok=True)
-    # setlists_clean.to_csv("data/setlists_clean.csv", index=False, encoding="utf-8")
-    # albums_clean.to_csv("data/albums_clean.csv", index=False, encoding="utf-8")
-    # concert_clean.to_csv("data/concert_clean.csv", index=False, encoding="utf-8")
+    # Write the test results to CSV
+    out_path = Path.cwd() / "data" / "csv_clean"
+    os.makedirs(out_path, exist_ok=True)
+
+    out_filenames = ["album_clean.csv", "setlist_clean.csv", "concert_clean.csv"]
+    out_dataframes = [album, setlist, concert]
+
+    for idx, out_filename in enumerate(out_filenames):
+        out_dataframes[idx].to_csv(
+            Path(out_path, out_filename), index=False, encoding="utf-8"
+        )
+
+    # Copy the city & venue tables to the csv_clean folder. No 
+    # additional cleaning is required for them, but it's nice to have
+    # everythig in one place for tests etc.
+    shutil.copy(Path(in_path, "city_raw.csv"), Path(out_path, "city_clean.csv"))
+    shutil.copy(Path(in_path, "venue_raw.csv"), Path(out_path, "venue_clean.csv"))

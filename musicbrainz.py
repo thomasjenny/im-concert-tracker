@@ -41,7 +41,7 @@ def get_releases(mbid: str) -> List[dict]:
     return releases
 
 
-def get_songs(releases: List[dict]) -> List[dict]:
+def get_songs(releases: List[dict], test: bool = False) -> List[dict]:
     """Fetch songs from the Musicbrainz API. Uses the output of
     get_releases() to extract all release MBIDs and query all songs for
     each release.
@@ -68,6 +68,9 @@ def get_songs(releases: List[dict]) -> List[dict]:
             print(f"Release {index} of {len(releases)} total releases queried.")
         elif index + 1 == len(releases):
             print(f"Release {index + 1} of {len(releases)} total releases queried.")
+
+        if (test == True) and (index == 4):
+            break
 
         time.sleep(1)
 

@@ -96,9 +96,9 @@ if __name__ == "__main__":
 
     # Write test results to JSON file
     out_path = Path.cwd() / "data" / "json_raw"
+    os.makedirs(out_path, exist_ok=True)
     out_filename_releases = "musicbrainz_releases.json"
     out_filename_songs = "musicbrainz_songs.json"
-    os.makedirs(out_path, exist_ok=True)
 
     with open(Path(out_path, out_filename_releases), "w") as releases_file:
         json.dump(releases, releases_file, indent=4)

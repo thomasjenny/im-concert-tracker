@@ -75,8 +75,8 @@ if __name__ == "__main__":
     pprint.pp(setlists[:2])
 
     out_path = Path.cwd() / "data" / "json_raw"
-    out_filename = "setlist_fm_setlists.json"
     os.makedirs(out_path, exist_ok=True)
+    out_filename = "setlist_fm_setlists.json"
 
     with open(Path(out_path / out_filename), "w") as file:
         json.dump(setlists, file, indent=4)

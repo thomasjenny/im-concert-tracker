@@ -20,6 +20,7 @@ SELECT
     ,setlist.tape
     ,setlist.cover_info
     ,setlist.encore
+    ,concert.tour
     ,city.latitude
     ,city.longitude
 FROM concert

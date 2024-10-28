@@ -1,6 +1,39 @@
-html,
-
 body {
   width: 100%;
   height: 100%
+}
+
+h2 {
+  font-family: 'Gill Sans', Tahoma, Sans-Serif;
+  color: #e5e1e6;
+  margin-left: 15px
+}
+
+p {
+  font-family: 'Gill Sans', Tahoma, Sans-Serif;
+  color: #e5e1e6;
+  /* font-size: 13px; */
+  margin-left: 15px;
+  margin-right: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px
+}
+
+img {
+    margin-top: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+.panel-default { 
+    background-color: #1F2022 
+}
+
+.shiny-input-container {
+    /* font-family: 'Oswald', sans-serif; */
+    font-family: 'Gill Sans', Tahoma, Sans-Serif;
+    color: #e5e1e6;
+    /* font-size: 13px; */
+    margin-left: 10px
 }

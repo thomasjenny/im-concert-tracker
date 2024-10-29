@@ -4,6 +4,7 @@ library(DBI)
 library(leaflet)
 library(dplyr)
 library(DT)
+library(purrr)
 
 
 ####################################################################################
@@ -159,14 +160,29 @@ ui <- fluidPage(
            British heavy metal band Iron Maiden."),
     
     # Tour dropdown
-    selectInput(
-      inputId = "tour",
-      label = "Select Tour",
-      choices = c("All Tours", unique(im.data.clean$tour))
+    tags$div(
+      id = "selection",
+        selectInput(
+        inputId = "tour",
+        label = "Select Tour",
+        choices = c("All Tours", unique(im.data.clean$tour))
+      )
     ),
     
-    # Test table
-    DTOutput("test.table")
+    # Travel route checkbox
+    tags$div(
+      id = "selection",
+        checkboxInput(
+        inputId = "travelroute_checkbox",
+        label = "Show Travel Route",
+        value = FALSE
+      )
+    ),
+    
+    tags$div(id = "travelroute-info", textOutput("travelroute_info")),
+    
+    # # Test table
+    # DTOutput("test.table")
   )
 )
 
@@ -183,8 +199,10 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  # Create the datasets for visualizations
+  
   # Filter the dataset based on the input
-  concert.data <- reactive({
+  setlist.data <- reactive({
     if (input$tour == "All Tours") {
       # Select everything except the concert_id column
       im.data.clean[, -1]
@@ -193,19 +211,45 @@ server <- function(input, output, session) {
     }
   })
   
-  # Check the test table
-  output$test.table <- renderDT({
-    datatable(concert.data()[1:20, ], options = list(pageLength = 20))
+  # # Check the test table
+  # output$test.table <- renderDT({
+  #   datatable(concert.data()[1:20, ], options = list(pageLength = 20))
+  # })
+  
+  # Create data for travel route
+  travelroute.data <- reactive({
+    setlist.data()[, c("city", "latitude", "longitude")] %>%
+      purrr::map_df(rev)
+    
+
+    
   })
   
+  #########################################################################
   
   
   
   # Create the map
   output$map <- renderLeaflet({
+    
+    # Define look of the city popups
+    popup.output = paste0("<center>",
+                            "<font size = 4>",
+                              "<b>", setlist.data()$city, ", ", setlist.data()$country, "</b>",
+                            "</font>", "<br>",
+                            "<font size = 3>",
+                              setlist.data()$date, "<br>",
+                              setlist.data()$venue,
+                            "</font>",
+                          "</center>",
+                            "<font size = 3>",
+                              "<br> <b> Setlist: </b> <br>",
+                              setlist.data()$`song_name`,
+                            "</font>")
+    
     # minZoom = maximal zoom factor possible when zooming out -> prevent app from 
     # showng a small tile with a lot of whitespace around
-    leaflet(options = leafletOptions(minZoom = 3.1)) %>%
+    map <- leaflet(options = leafletOptions(minZoom = 2.8)) %>%
       # Add the layout for the map
       addProviderTiles(providers$CartoDB.DarkMatter, # Stadia.StamenTonerLite,
                        options = providerTileOptions(noWrap = TRUE)) %>%
@@ -215,10 +259,47 @@ server <- function(input, output, session) {
         lng2 = 180, lat2 = 83
       ) %>%
       # setView = the starting point / "frame" that you see when you open the app.
-      setView(lng = 10, lat = 47, zoom = 4)
-       #%>%
-      #addMarkers(data = points())
+      setView(lng = 10, lat = 47, zoom = 4) %>%
+      # Add the circle markers
+      addCircleMarkers(data = setlist.data(),
+                       lng = ~longitude,
+                       lat = ~latitude,
+                       label = ~city,
+                       popup = popup.output,
+                       color = "#9B2242",
+                       stroke = FALSE,
+                       radius = 5,
+                       fillOpacity = 1)
+    
+    
+    # Display the travel route if an individual tour is selected.
+      if (input$travelroute_checkbox == TRUE && input$tour != "All Tours") {
+          map <- map %>% addPolylines(data = travelroute.data(),
+                     lng = ~longitude,
+                     lat = ~latitude,
+                     color = "red",
+                     weight = 6,
+                     opacity = 0.4,
+                     smoothFactor = 5)
+      }
+        
+      map
   })
+  
+  
+  # Define text output if "All Tours" is selected from the dropdown and the checkbox
+  # is ticked
+
+  
+  output$travelroute_info <- renderText({
+    if (input$travelroute_checkbox == TRUE && input$tour == "All Tours") {
+       "Travel route can only be displayed for a specific tour"
+    } else {
+       ""
+     }
+  })
+  
+  
 }
 
 

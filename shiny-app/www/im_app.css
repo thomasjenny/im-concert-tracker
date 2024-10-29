@@ -26,6 +26,23 @@ img {
     margin-right: auto
 }
 
+#travelroute-info {
+    /* font-family: 'Oswald', sans-serif; */
+    font-family: 'Gill Sans', Tahoma, Sans-Serif;
+    color: red;
+    margin-left: 15px;
+  margin-right: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px
+}
+
+#selection {
+  margin-left: 7px;
+ /*margin-right: auto;*/
+  margin-top: 15px;
+  margin-bottom: 15px
+}
+
 .panel-default { 
     background-color: #1F2022 
 }
@@ -37,3 +54,4 @@ img {
     /* font-size: 13px; */
     margin-left: 10px
 }
+

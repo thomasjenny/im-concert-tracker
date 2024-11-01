@@ -9,85 +9,52 @@ library(purrr)
 
 ####################################################################################
 
-# # Get data from DB
-# # WD path might change depending on whether the app is run or only the code itself.
 # if (grepl("shiny-app", getwd())) {
-#   conn <- dbConnect(RSQLite::SQLite(), file.path(getwd(), "..", "data", "db", "iron_maiden_concerts.db"))
+#   data.raw <- read.csv(file.path(getwd(), "data", "concerts.csv"))
 # } else {
-#   conn <- dbConnect(RSQLite::SQLite(), file.path(getwd(), "data", "db", "iron_maiden_concerts.db"))
+#   data.raw <- read.csv(file.path(getwd(), "shiny-app", "data", "concerts.csv"))
 # }
-# 
-# im.data.raw <- dbGetQuery(conn, "
-#   SELECT
-#     concert.concert_id
-#     ,concert.date
-#     ,venue.venue
-#     ,city.city
-#     ,city.latitude
-#     ,city.longitude
-#     ,city.country
-#     ,concert.tour
-#     ,setlist.setlist_position
-#     ,setlist.song_name
-#     ,album.album_name
-#     ,setlist.tape
-#     ,setlist.cover_info
-#     ,setlist.encore
-#   FROM concert
-#   LEFT JOIN venue ON concert.venue_id = venue.venue_id
-#   LEFT JOIN city ON concert.city_id = city.city_id
-#   LEFT JOIN setlist ON concert.concert_id = setlist.concert_id
-#   LEFT JOIN album ON setlist.song_name = album.song_name
-#   ORDER BY 
-#     SUBSTR(date, 7, 4) || '-' ||  -- Year
-#     SUBSTR(date, 4, 2) || '-' ||  -- Month
-#     SUBSTR(date, 1, 2) DESC       -- Day DESC
-#     ,setlist_position ASC
-# ;
-# ")
-# dbDisconnect(conn)
-# 
-# 
-# 
-# 
-# 
+# # 
+# # 
+# # 
+# # 
 # # Data cleaning - create DF with the information for the text box.
 # clean.data <- function(df) {
-#   # Define empty DF for all concerts (1 row per concert/setlist)
-#   setlists.df <- data.frame(matrix(ncol = 9, nrow = 0))
-#   
-#   # Loop thrugh all unique concert IDs to create setlists
-#   for (concert in unique(df$concert_id)) {
-#     single.concert <- subset(df, concert_id == concert)
-#     
-#     # Add a value to all rows where album_name is NA (i.e., non-original songs)
-#     single.concert$album_name[is.na(single.concert$album_name)] <- "Playbacks/Intros/Covers" # %>%
-#     
-#     # Add a value to all rows where venue is an empty string
-#     single.concert$venue[single.concert$venue == ""] <- "Unknown Venue"
-#     
-#     # Convert empty strings in the cover_info column to NA
-#     single.concert <- single.concert %>%
-#       mutate(cover_info = na_if(cover_info, "")) %>%
-#     
-#       # Add tape/cover info to the song names in brackets
-#       mutate(
-#         song_name = case_when(
-#           tape == 1 & !is.na(cover_info) ~ paste0(song_name, " (from tape, oringinally by ", cover_info, ")"),
-#           tape == 1 ~ paste0 (song_name, " (from tape"),
-#           !is.na(cover_info) ~ paste0(song_name, " (", cover_info, " cover)"),
-#           TRUE ~ song_name
-#         )
-#       ) %>%
-#       
+#  # Define empty DF for all concerts (1 row per concert/setlist)
+#  setlists.df <- data.frame(matrix(ncol = 9, nrow = 0))
+#  
+#  # Loop through all unique concert IDs to create setlists
+#  for (concert in unique(df$id)) {
+#    single.concert <- subset(df, id == concert)
+#      
+#      # Add a value to all rows where album_name is NA (i.e., non-original songs) - NOT REQUIRED ANYMORE!
+#      # single.concert$album_name[is.na(single.concert$album_name)] <- "Playbacks/Intros/Covers" # %>%
+#      
+#      # Add a value to all rows where venue is an empty string
+#      single.concert$venue[single.concert$venue == ""] <- "Unknown Venue"
+#      
+#      # Convert empty strings in the cover_info column to NA
+#      single.concert <- single.concert %>%
+#        mutate(cover = na_if(cover, "")) %>%
+#      
+#        # Add tape/cover info to the song names in brackets
+#        mutate(
+#          song_title = case_when(
+#            from_tape == 1 & !is.na(cover) ~ paste0(song_title, " (from tape, ", cover, " song)"),
+#            from_tape == 1 ~ paste0(song_title, " (from tape)"),
+#            !is.na(cover) ~ paste0(song_title, " (", cover, " cover)"),
+#            TRUE ~ song_title
+#          )
+#         ) %>%
+# 
 #       # Concatenate setlist order numbers and song titles (e.g., 1. The Evil That Men Do)
-#       mutate(song_name = ifelse(
-#         !is.na(setlist_position) & !is.na(song_name), paste0(setlist_position, ". ", song_name), NA
+#       mutate(song_title = ifelse(
+#         !is.na(song_count) & !is.na(song_title), paste0(song_count, ". ", song_title), NA
 #         )
 #       ) %>%
-#       
+# 
 #       # Create a single row for the concert data
-#       group_by(concert_id) %>%
+#       group_by(id) %>%
 #         summarise(
 #           date = first(date),
 #           venue = first(venue),
@@ -96,18 +63,18 @@ library(purrr)
 #           longitude = first(longitude),
 #           country = first(country),
 #           tour = first(tour),
-#           song_name = paste(song_name, collapse = "<br>")
+#           song_name = paste(song_title, collapse = "<br>")
 #       )
 # 
 #     # Add the single concert row to the setlists dataframe
 #     setlists.df <- rbind(setlists.df, single.concert[1, ])
-#   }
-#   
+#    }
+# 
 #   return(setlists.df)
 # }
-
-# im.data.clean <- clean.data(im.data.raw)
-# write.csv(im.data.clean, "shiny_setlists_data.csv", row.names = FALSE)
+# 
+# im.data.clean <- clean.data(data.raw)
+# # write.csv(im.data.clean, "shiny_setlists_data.csv", row.names = FALSE)
 
 
 

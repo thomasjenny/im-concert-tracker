@@ -43,4 +43,4 @@ if __name__ == "__main__":
     # Save the clean data to CSV
     out_path = Path(Path.cwd() / "data_prep" / "data" / "csv")
     os.makedirs(out_path, exist_ok=True)
-    concerts.to_csv(Path(out_path / "concerts.csv"), index=False)
+    concerts.to_csv(Path(out_path / "concerts_clean.csv"), index=False)

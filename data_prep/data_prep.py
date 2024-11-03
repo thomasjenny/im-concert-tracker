@@ -53,6 +53,13 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
         condlist, choicelist, default=concerts_df["song_title"]
     )
 
+    # Concatenate setlist position and song title
+    concerts_df["song_title"] = (
+        concerts_df["song_count"].astype(str)
+        + ". "
+        + concerts_df["song_title"].astype(str)
+    )
+
     single_line_setlists = []
 
     # Create a single string for each setlist - determined by the id
@@ -63,17 +70,22 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
             # Convert NAs (= missing song titles) to empty strings
             song_title = row["song_title"] if pd.notna(row["song_title"]) else ""
             concatenated_setlist.append(song_title)
-            concatenated_setlist.append("<br>")
 
             # Add encore information
             if (pd.notna(row["encore"])) and (
                 f"Encore {int(row["encore"])}:" not in concatenated_setlist
             ):
+                # pop is required to ensure correct order of encore 
+                # list elements
+                first_encore_song = concatenated_setlist.pop()
                 concatenated_setlist.append("<b>")
                 concatenated_setlist.append(f"Encore {int(row["encore"])}:")
                 concatenated_setlist.append("</b>")
                 concatenated_setlist.append("<br>")
+                concatenated_setlist.append(first_encore_song)
 
+            concatenated_setlist.append("<br>")
+        
         # Create single setlist string & create DataFrame from setlists
         concatenated_setlist_str = "".join(concatenated_setlist)
         single_line_setlists.append({"id": id, "song_title": concatenated_setlist_str})

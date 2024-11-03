@@ -74,7 +74,7 @@ if __name__ == "__main__":
     setlists = get_setlists(mbid, headers)
     pprint.pp(setlists[:2])
 
-    out_path = Path.cwd() / "data" / "json_raw"
+    out_path = Path.cwd() / "data_prep" / "data" / "json_raw"
     os.makedirs(out_path, exist_ok=True)
     out_filename = "setlist_fm_setlists.json"
 

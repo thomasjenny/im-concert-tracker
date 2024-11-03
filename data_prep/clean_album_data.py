@@ -3,7 +3,7 @@ from typing import List, Dict
 import pandas as pd
 
 
-def create_albums_table(releases: List[Dict]) -> pd.DataFrame:
+def clean_album_data(releases: List[Dict]) -> pd.DataFrame:
     """Normalize the musicbrainz albums/songs data and ....
 
     Args:
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         albums = json.load(songs_file)
 
     # Run the data cleaning function
-    albums = create_albums_table(albums)
+    albums = clean_album_data(albums)
 
     # Save the clean data to CSV
     out_path = Path.cwd() / "data_prep" / "data" / "csv"

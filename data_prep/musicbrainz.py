@@ -98,7 +98,7 @@ if __name__ == "__main__":
     print(len(songs))
 
     # Write test results to JSON file
-    out_path = Path.cwd() / "data" / "json_raw"
+    out_path = Path.cwd() / "data_prep" / "data" / "json_raw"
     os.makedirs(out_path, exist_ok=True)
     out_filename_releases = "musicbrainz_releases.json"
     out_filename_songs = "musicbrainz_songs.json"

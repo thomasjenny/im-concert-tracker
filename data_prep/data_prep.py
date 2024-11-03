@@ -29,7 +29,7 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
     #   - from_tape == True
     #   - ONLY cover column contains a value
     condlist = [
-        concerts_df["from_tape"].eq(True) & concerts["cover"].notna(),
+        concerts_df["from_tape"].eq(True) & concerts_df["cover"].notna(),
         concerts_df["from_tape"].eq(True),
         concerts_df["cover"].notna(),
     ]
@@ -37,13 +37,13 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
     choicelist = [
         np.where(
             concerts_df["cover"].notna(),
-            concerts_df["song_title"] + " (from tape, " + concerts["cover"] + " song)",
+            concerts_df["song_title"] + " (from tape, " + concerts_df["cover"] + " song)",
             concerts_df["song_title"],
         ),
-        concerts["song_title"] + " (from tape)",
+        concerts_df["song_title"] + " (from tape)",
         np.where(
             concerts_df["cover"].notna(),
-            concerts_df["song_title"] + " (" + concerts["cover"] + " cover)",
+            concerts_df["song_title"] + " (" + concerts_df["cover"] + " cover)",
             concerts_df["song_title"],
         ),
     ]

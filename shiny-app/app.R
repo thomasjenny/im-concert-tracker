@@ -83,10 +83,16 @@ library(purrr)
 
 
 
+# if (grepl("shiny-app", getwd())) {
+#   im.data.clean <- read.csv(file.path(getwd(), "data", "shiny_setlists_data.csv"))
+# } else {
+#   im.data.clean <- read.csv(file.path(getwd(), "shiny-app", "data", "shiny_setlists_data.csv"))
+# }
+
 if (grepl("shiny-app", getwd())) {
-  im.data.clean <- read.csv(file.path(getwd(), "data", "shiny_setlists_data.csv"))
+  setlists <- read.csv(file.path(getwd(), "data", "app_setlist_data.csv"))
 } else {
-  im.data.clean <- read.csv(file.path(getwd(), "shiny-app", "data", "shiny_setlists_data.csv"))
+  setlists <- read.csv(file.path(getwd(), "shiny-app", "data", "app_setlist_data.csv"))
 }
 
 ####################################################################################
@@ -172,9 +178,9 @@ server <- function(input, output, session) {
   setlist.data <- reactive({
     if (input$tour == "All Tours") {
       # Select everything except the concert_id column
-      im.data.clean[, -1]
+      setlists[, -1]
     } else {
-      im.data.clean[im.data.clean$tour == input$tour, -1]
+      setlists[setlists$tour == input$tour, -1]
     }
   })
   
@@ -201,17 +207,18 @@ server <- function(input, output, session) {
     
     # Define look of the city popups
     popup.output = paste0("<center>",
-                            "<font size = 4>",
+                            "<font size = 3>",
                               "<b>", setlist.data()$city, ", ", setlist.data()$country, "</b>",
                             "</font>", "<br>",
-                            "<font size = 3>",
+                            "<font size = 2>",
                               setlist.data()$date, "<br>",
                               setlist.data()$venue,
                             "</font>",
                           "</center>",
-                            "<font size = 3>",
+                            "<font size = 2>",
                               "<br> <b> Setlist: </b> <br>",
-                              setlist.data()$`song_name`,
+                              # Replace "Encore 1" with "Encore" only
+                              sub("Encore 1", "Encore", setlist.data()$setlist),
                             "</font>")
     
     # minZoom = maximal zoom factor possible when zooming out -> prevent app from 
@@ -232,10 +239,12 @@ server <- function(input, output, session) {
                        lng = ~longitude,
                        lat = ~latitude,
                        label = ~city,
+                       labelOptions = labelOptions(style = list("font-size" = "12px")),
                        popup = popup.output,
+                       # popupOptions = popupOptions(style = list("font-size" = "10px")),
                        color = "#9B2242",
                        stroke = FALSE,
-                       radius = 5,
+                       radius = 6,
                        fillOpacity = 1)
     
     

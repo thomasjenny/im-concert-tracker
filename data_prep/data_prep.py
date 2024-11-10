@@ -20,8 +20,11 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
             song, tape, and cover information, and the concatenation of
             all songs into a single string to be used in the Shiny app
     """
+    # Create a copy of the original DataFrame
+    concerts = concerts_df.copy(deep=True)
+
     # Add missing venue information (NA = unknown venue)
-    concerts_df["venue"] = concerts_df["venue"].fillna("Unknown Venue")
+    concerts["venue"] = concerts["venue"].fillna("Unknown Venue")
 
     # Concatenate song title and playback (tape) & cover information
     # Conditions:
@@ -29,41 +32,39 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
     #   - from_tape == True
     #   - ONLY cover column contains a value
     condlist = [
-        concerts_df["from_tape"].eq(True) & concerts_df["cover"].notna(),
-        concerts_df["from_tape"].eq(True),
-        concerts_df["cover"].notna(),
+        concerts["from_tape"].eq(True) & concerts["cover"].notna(),
+        concerts["from_tape"].eq(True),
+        concerts["cover"].notna(),
     ]
 
     choicelist = [
         np.where(
-            concerts_df["cover"].notna(),
-            concerts_df["song_title"] + " (from tape, " + concerts_df["cover"] + " song)",
-            concerts_df["song_title"],
+            concerts["cover"].notna(),
+            concerts["song_title"] + " (from tape, " + concerts["cover"] + " song)",
+            concerts["song_title"],
         ),
-        concerts_df["song_title"] + " (from tape)",
+        concerts["song_title"] + " (from tape)",
         np.where(
-            concerts_df["cover"].notna(),
-            concerts_df["song_title"] + " (" + concerts_df["cover"] + " cover)",
-            concerts_df["song_title"],
+            concerts["cover"].notna(),
+            concerts["song_title"] + " (" + concerts["cover"] + " cover)",
+            concerts["song_title"],
         ),
     ]
 
     # Apply choicelist on condlist
-    concerts_df["song_title"] = np.select(
-        condlist, choicelist, default=concerts_df["song_title"]
+    concerts["song_title"] = np.select(
+        condlist, choicelist, default=concerts["song_title"]
     )
 
     # Concatenate setlist position and song title
-    concerts_df["song_title"] = (
-        concerts_df["song_count"].astype(str)
-        + ". "
-        + concerts_df["song_title"].astype(str)
+    concerts["song_title"] = (
+        concerts["song_count"].astype(str) + ". " + concerts["song_title"].astype(str)
     )
 
     single_line_setlists = []
 
     # Create a single string for each setlist - determined by the id
-    for id, setlist in concerts_df.groupby("id"):
+    for id, setlist in concerts.groupby("id"):
         concatenated_setlist = []
 
         for index, row in setlist.iterrows():
@@ -75,7 +76,7 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
             if (pd.notna(row["encore"])) and (
                 f"Encore {int(row["encore"])}:" not in concatenated_setlist
             ):
-                # pop is required to ensure correct order of encore 
+                # pop is required to ensure correct order of encore
                 # list elements
                 first_encore_song = concatenated_setlist.pop()
                 concatenated_setlist.append("<b>")
@@ -85,7 +86,7 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
                 concatenated_setlist.append(first_encore_song)
 
             concatenated_setlist.append("<br>")
-        
+
         # Create single setlist string & create DataFrame from setlists
         concatenated_setlist_str = "".join(concatenated_setlist)
         single_line_setlists.append({"id": id, "song_title": concatenated_setlist_str})
@@ -93,48 +94,20 @@ def prepare_setlists(concerts_df: pd.DataFrame) -> pd.DataFrame:
     single_line_setlists_df = pd.DataFrame(single_line_setlists)
 
     # Delete duplicate rows by ID and insert single string setlists
-    concerts_df = concerts_df.drop_duplicates(subset="id", keep="first").drop(
+    concerts = concerts.drop_duplicates(subset="id", keep="first").drop(
         columns=["song_title"]
     )
-    concerts_df = concerts_df.merge(single_line_setlists_df, on="id", how="left")
+    concerts = concerts.merge(single_line_setlists_df, on="id", how="left")
 
-    concerts_df = concerts_df.drop(
+    concerts = concerts.drop(
         columns=["song_count", "encore", "from_tape", "cover", "album_name"]
     )
-    concerts_df = concerts_df.rename(columns={"song_title": "setlist"})
+    concerts = concerts.rename(columns={"song_title": "setlist"})
 
-    return concerts_df
-
-
-def prepare_concerts_per_city(concerts_df: pd.DataFrame) -> pd.DataFrame:
-    """Creates a DataFrame containing all concerts played in each city
-    without setlist information
-
-    Args:
-        concerts_df (DataFrame): the cleaned dataframe containing all
-            concert information
-
-    Returns:
-        concerts_per_city (DataFrame): a DataFrame containing all
-            concerts played in each city without setlist information
-    """
-    concerts_per_city = concerts_df.drop(
-        columns=[
-            "song_count",
-            "song_title",
-            "encore",
-            "from_tape",
-            "cover",
-            "album_name",
-        ]
-    )
-
-    concerts_per_city = concerts_per_city.drop_duplicates(subset="id", keep="first")
-
-    return concerts_per_city
+    return concerts
 
 
-def prepare_albums_total(concerts_df: pd.DataFrame) -> pd.DataFrame:
+def prepare_albums_songs_played(concerts_df: pd.DataFrame) -> pd.DataFrame:
     """Creates a DataFrame containing tour and album data for all
     concerts
 
@@ -146,7 +119,9 @@ def prepare_albums_total(concerts_df: pd.DataFrame) -> pd.DataFrame:
         albums_total (DataFrame): a DataFrame containing tour and album
             data for all concerts
     """
-    albums_total = concerts_df.drop(
+    albums_songs_played = concerts_df.copy(deep=True)
+
+    albums_songs_played = albums_songs_played.drop(
         columns=[
             "venue",
             "city",
@@ -154,17 +129,16 @@ def prepare_albums_total(concerts_df: pd.DataFrame) -> pd.DataFrame:
             "latitude",
             "longitude",
             "song_count",
-            "song_title",
             "encore",
             "from_tape",
             "cover",
         ]
     )
 
-    # Drop duplicate IDs
-    albums_total = albums_total.dropna(subset="album_name")
+    # Drop all rows that don't have an album (covers, playbacks, etc.)
+    albums_songs_played = albums_songs_played.dropna(subset="album_name")
 
-    return albums_total
+    return albums_songs_played
 
 
 if __name__ == "__main__":
@@ -177,12 +151,7 @@ if __name__ == "__main__":
     setlists = prepare_setlists(concerts)
     setlists.to_csv(Path(path / "app_setlist_data.csv"), index=False, encoding="utf-8")
 
-    concerts_per_city = prepare_concerts_per_city(concerts)
-    concerts_per_city.to_csv(
-        Path(path / "app_city_data.csv"), index=False, encoding="utf-8"
-    )
-
-    albums_total = prepare_albums_total(concerts)
-    albums_total.to_csv(
-        Path(path / "app_albums_data.csv"), index=False, encoding="utf-8"
+    albums_songs_total = prepare_albums_songs_played(concerts)
+    albums_songs_total.to_csv(
+        Path(path / "app_albums_songs.csv"), index=False, encoding="utf-8"
     )

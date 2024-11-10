@@ -57,13 +57,14 @@ def run_data_pipeline(
 
     # Prepare data for app
     app_setlists = data_prep.prepare_setlists(concerts)
-    app_concerts_per_city = data_prep.prepare_concerts_per_city(concerts)
-    app_albums_total = data_prep.prepare_albums_total(concerts)
+    app_albums_songs_played = data_prep.prepare_albums_songs_played(concerts)
 
-    return app_setlists, app_concerts_per_city, app_albums_total
+    return app_setlists, app_albums_songs_played
 
 
 if __name__ == "__main__":
+    import shutil
+
     from dotenv import load_dotenv
 
     mbid = "ca891d65-d9b0-4258-89f7-e6ba29d83767"
@@ -76,13 +77,27 @@ if __name__ == "__main__":
         "Accept-Languate": "en",
     }
 
-    # in_path =
-
     missing_tour_data_file = Path.cwd() / "data_prep" / "data" / "missing_tour_data.csv"
     missing_tour_data = pd.read_csv(missing_tour_data_file)
 
-    a, b, c = run_data_pipeline(mbid, headers, missing_tour_data, call_api=False)
+    setlists, albums_songs = run_data_pipeline(
+        mbid, headers, missing_tour_data, call_api=True
+    )
 
-    print(a.head())
-    print(b.head())
-    print(c.head())
+    out_path = Path.cwd() / "data_prep" / "data" / "csv"
+
+    setlists.to_csv(
+        Path(out_path / "app_setlist_data.csv"), index=False, encoding="utf-8"
+    )
+    albums_songs.to_csv(
+        Path(out_path / "app_albums_songs.csv"), index=False, encoding="utf-8"
+    )
+
+    # Copy files to Shiny app data directory
+    app_path = Path.cwd() / "shiny-app" / "data"
+    shutil.copy(
+        Path(out_path / "app_setlist_data.csv"), Path(app_path / "app_setlist_data.csv")
+    )
+    shutil.copy(
+        Path(out_path / "app_albums_songs.csv"), Path(app_path / "app_albums_songs.csv")
+    )

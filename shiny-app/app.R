@@ -1,26 +1,10 @@
 library(shiny)
 library(leaflet)
 library(dplyr)
-# library(DT)
 library(purrr)
 library(cowplot)
 library(plotly)
 
-
-# Only relevant if local data should be used
-# # Get setlists data
-# if (grepl("shiny-app", getwd())) {
-#   setlists <- read.csv(file.path(getwd(), "data", "app_setlist_data.csv"))
-# } else {
-#   setlists <- read.csv(file.path(getwd(), "shiny-app", "data", "app_setlist_data.csv"))
-# }
-# 
-# # Get data for songs & albums played
-# if (grepl("shiny-app", getwd())) {
-#   albums.songs <- read.csv(file.path(getwd(), "data", "app_albums_songs.csv"))
-# } else {
-#   albums.songs <- read.csv(file.path(getwd(), "shiny-app", "data", "app_albums_songs.csv"))
-# }
 
 # Get setlists data
 setlists <- read.csv(file.path(getwd(), "data", "app_setlist_data.csv"))
@@ -28,15 +12,17 @@ setlists <- read.csv(file.path(getwd(), "data", "app_setlist_data.csv"))
 albums.songs <- read.csv(file.path(getwd(), "data", "app_albums_songs.csv"))
 
 
+# ---------------------------------- UI function ----------------------------------
 ui <- fluidPage(
-  # Import CSS Stylesheet
+  # Import CSS stylesheet
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "im_app.css")
   ),
   
-  # Map element
+  # Create the map
   leafletOutput("map", width = "100%", height = "100vh"),
   
+  # Create the control panel
   absolutePanel(
     id = "controls",
     class = "panel panel-default",
@@ -52,15 +38,15 @@ ui <- fluidPage(
     # Header image
     tags$img(src = "Iron_Maiden_logo.png", width = "95%"),
     
-    # Sidebar Text
-    tags$h2("Live Show Database"),
+    # Control panel text
+    tags$h1("Live Show Database"),
     
     tags$p(
-      "This database contains information about all concerts ever played by
-           British heavy metal band Iron Maiden."
+      "This database contains information about all concerts ever played by British 
+      heavy metal band Iron Maiden."
     ),
     
-    # Tour dropdown
+    # Tour selection dropdown
     tags$div(
       id = "selection",
       selectInput(
@@ -70,7 +56,7 @@ ui <- fluidPage(
       )
     ),
     
-    # Travel route checkbox
+    # Travel route display checkbox
     tags$div(
       id = "selection",
       checkboxInput(
@@ -80,58 +66,52 @@ ui <- fluidPage(
       )
     ),
     
-    tags$div(id = "travelroute-info", textOutput("travelroute_info")),
-    
-    
-    radioButtons(
-      inputId = "album_song_rb",
-      label = "Show statistics for most played...",
-      choiceNames = list("Albums", "Songs"),
-      choiceValues = list("albums", "songs"),
-      inline = TRUE
+    # Text output if travel rout cannot be displayed
+    tags$div(
+      id = "travelroute-info",
+      textOutput("travelroute_info")
     ),
     
+    # Radio buttons to switch between most played albums/songs plot
+    tags$div(
+      id = "selection",
+      radioButtons(
+        inputId = "album_song_rb",
+        label = "Show statistics for most played...",
+        choiceNames = list("Albums", "Songs"),
+        choiceValues = list("albums", "songs"),
+        inline = TRUE
+      )
+    ),
     
-    
+    # Most played albums/songs plot
     plotlyOutput("albums.plot", width = "100%", height = "300px")
   )
 )
 
 
-
-
-
-####################################################################################
-#
-# SERVER
-#
-####################################################################################
-
-
+# --------------------------------- Server function -------------------------------
 server <- function(input, output, session) {
-  # Define input
-  
-  
-  # Filter the dataset based on the input
+  # Filter both datasets
+  # Filter the setlist data based on the tour input
+  #
+  # Filter the setlist data based on the tour input -> used to display points on the
+  # map and populate the popup
   setlist.data <- reactive({
     if (input$tour == "All Tours") {
-      # Select everything except the concert_id column
       setlists[, -1]
     } else {
       setlists[setlists$tour == input$tour, -1]
     }
   })
   
-  
-  
-  # Create data for travel route
+  # Create the travel route data -> select required columns and reverse order
   travelroute.data <- reactive({
     setlist.data()[, c("city", "latitude", "longitude")] %>%
       purrr::map_df(rev)
   })
   
-  
-  # Create data for albums data
+  # Create data for the albums/songs plot
   albums.data <- reactive({
     if (input$tour == "All Tours") {
       albums.top.n <- albums.songs %>%
@@ -154,9 +134,6 @@ server <- function(input, output, session) {
     albums.top.n
   })
   
-  
-  
-  # Create data for songs data
   songs.data <- reactive({
     if (input$tour == "All Tours") {
       songs.top.n <- albums.songs %>%
@@ -178,10 +155,6 @@ server <- function(input, output, session) {
     
     songs.top.n
   })
-  
-  
-  #########################################################################
-  
   
   
   # Create the map
@@ -255,9 +228,9 @@ server <- function(input, output, session) {
     
     # minZoom = maximal zoom factor possible when zooming out -> prevent app from
     # showng a small tile with a lot of whitespace around
-    map <- leaflet(options = leafletOptions(minZoom = 2.8)) %>%
+    map <- leaflet(options = leafletOptions(minZoom = 2.5)) %>%
       # Add the layout for the map
-      addProviderTiles(providers$CartoDB.DarkMatter, # Stadia.StamenTonerLite,
+      addProviderTiles(providers$CartoDB.DarkMatter,
                        options = providerTileOptions(noWrap = TRUE)) %>%
       # MaxBounds determine the "end" of the map --> prevent the "ribbon" effect
       setMaxBounds(
@@ -279,13 +252,11 @@ server <- function(input, output, session) {
         labelOptions = labelOptions(style = list("font-size" = "12px")),
         popup = ~ popup.text,
         # popupOptions = popupOptions(style = list("font-size" = "10px")),
-        color = "#9B2242",
+        color = "#ec273f",
         stroke = FALSE,
-        radius = 6,
+        radius = 7,
         fillOpacity = 1
       )
-    
-    
     
     
     # Display the travel route if an individual tour is selected.
@@ -295,7 +266,7 @@ server <- function(input, output, session) {
         data = travelroute.data(),
         lng = ~ longitude,
         lat = ~ latitude,
-        color = "red",
+        color = "#ff0000",
         weight = 6,
         opacity = 0.4,
         smoothFactor = 5
@@ -306,10 +277,8 @@ server <- function(input, output, session) {
   })
   
   
-  # Define text output if "All Tours" is selected from the dropdown and the checkbox
-  # is ticked
-  
-  
+  # Define text output if "All Tours" is selected from the dropdown and the travel
+  # rout checkbox is ticked -> if yes, display warning
   output$travelroute_info <- renderText({
     if (input$travelroute_checkbox == TRUE &&
         input$tour == "All Tours") {
@@ -320,12 +289,9 @@ server <- function(input, output, session) {
   })
   
   
-  
-  
-  
-  
-  # Define Donut Chart
+  # Define most played albums/songs plot
   output$albums.plot <- renderPlotly({
+    # Define the text to be displayed on mouseover/hover
     if (input$album_song_rb == "albums") {
       plot.data <- albums.data
       hover.info <- paste(
@@ -342,27 +308,27 @@ server <- function(input, output, session) {
       )
     }
     
-    # Definition of colors for plot segments (start with red)
-    # colors <- c("#9B2242", "#D9D9D6", "#EB212E", "#726E75", "#F4364C",
-    #             "#8A8D8F", "#A1000E", "#E5E1E6", "#D22730", "#63666A")
-    
+    # Define plot segements colors
     colors <- c(
-      "#060607",
-      "#1d1e21",
-      "#261415",
-      "#372625",
-      "#452727",
+      "#ec273f",
+      "#111111",
+      "#a70000",
+      "#333333",
       "#602322",
+      "#1d1e21",
       "#8d2523",
+      "#261415",
+      "#ff5252",
+      "#372625",
       "#ba332d",
+      "#452727",
+      "#ba332d",
+      "#555555",
       "#ff4537",
-      "#ff8e6d",
-      "#f1a39d",
-      "#ffcbb5"
+      "#777777"
     )
     
     # Donut chart
-    # albums.data() %>%
     plot.data() %>%
       plot_ly() %>%
       
@@ -377,12 +343,9 @@ server <- function(input, output, session) {
         outsidetextfont = list(color = "#e5e1e6"),
         marker = list(
           colors = colors,
-          line = list(color = "#ffffff", width = 1)
+          line = list(color = "#e5e1e6", width = 1)
         ),
         hovertemplate = hover.info
-        # hovertemplate = paste("Total number of songs played from <br>",
-        #                      "<i>%{label}</i>: <br>",
-        #                        "%{value} (%{percent})<extra></extra>")
       ) %>%
       layout(
         showlegend = FALSE,
@@ -401,15 +364,7 @@ server <- function(input, output, session) {
       config(displayModeBar = FALSE)
   })
   
-  
-  
-  
-  
-  
 }
-
-
-####################################################################################
 
 
 # Run the application

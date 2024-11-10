@@ -3,7 +3,7 @@ body {
   height: 100%
 }
 
-h2 {
+h1 {
   font-family: 'Gill Sans', Tahoma, Sans-Serif;
   color: #e5e1e6;
   margin-left: 15px
@@ -12,7 +12,6 @@ h2 {
 p {
   font-family: 'Gill Sans', Tahoma, Sans-Serif;
   color: #e5e1e6;
-  /* font-size: 13px; */
   margin-left: 15px;
   margin-right: 15px;
   margin-top: 15px;
@@ -20,44 +19,38 @@ p {
 }
 
 img {
-    margin-top: 10px;
-    display: block;
-    margin-left: auto;
-    margin-right: auto
+  margin-top: 10px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto
 }
 
-/* Error text style if travel route cannot be displayed */
- #travelroute-info {
-   font-family: 'Gill Sans', Tahoma, Sans-Serif;
-   color: red;
-   margin-left: 15px;
-   margin-right: 15px;
-   margin-top: 15px;
-   margin-bottom: 15px
+#travelroute-info {
+  font-family: 'Gill Sans', Tahoma, Sans-Serif;
+  color: #ff0000;
+  margin-left: 15px;
+  margin-right: 15px;
+  margin-top: 15px;
+  margin-bottom: 15px
  }
-
 
 #selection {
   margin-left: 7px;
- /*margin-right: auto;*/
   margin-top: 15px;
   margin-bottom: 15px
 }
 
 .panel-default { 
-    background-color: #1F2022 
+  background-color: #1F2022 
 }
 
 .shiny-input-container {
-    /* font-family: 'Oswald', sans-serif; */
-    font-family: 'Gill Sans', Tahoma, Sans-Serif;
-    color: #e5e1e6;
-    /* font-size: 13px; */
-    margin-left: 10px
+  font-family: 'Gill Sans', Tahoma, Sans-Serif;
+  color: #e5e1e6;
+  margin-left: 10px
 }
 
 .custom-popup{
   max-height: 450px;
   overflow-y: auto;
 }
-
